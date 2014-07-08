@@ -86,8 +86,6 @@ def getInformation(location, identifier, output_file):
 
 	master_list = []
 	ages = []
-	print ages
-	print master_list
 	nummale = 0
 	numfemale = 0
 
