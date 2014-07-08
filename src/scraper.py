@@ -17,17 +17,8 @@ import datetime
 import subprocess
 import gc
 
-import cherrypy
-import dowser
-
-def start(port):
-    cherrypy.tree.mount(dowser.Root())
-    cherrypy.config.update({
-        'environment': 'embedded',
-        'server.socket_port': port
-    })
-    cherrypy.server.quickstart()
-    cherrypy.engine.start(blocking=False)
+from guppy import hpy
+h = hpy()
 
 vrdb = 'active.txt'
 
@@ -171,12 +162,13 @@ def getInformation(location, identifier, output_file):
 	perfemale = '{percent:.3%}'.format(percent=numfemale/total_values)
 	permale = '{percent:.3%}'.format(percent=nummale/total_values)
 
-	results = str(identifier) + ',' + str(average_age) + ',' + str(nummale) + ',' + str(permale) + ',' + str(mq1)+ ',' + str(mq2) + ',' + str(mq3) + ',' + str(mq4) + ',' + str(mq5) + ',' + str(mq6) + ',' + str(numfemale) + ',' +  str(perfemale) + str(fq1)+ ',' + str(fq2) + ',' + str(fq3) + ',' + str(fq4) + ',' + str(fq5) + ',' + str(fq6)
+	results = str(identifier) + ',' + str(average_age) + ',' + str(nummale) + ',' + str(permale) + ',' + str(mq1)+ ',' + str(mq2) + ',' + str(mq3) + ',' + str(mq4) + ',' + str(mq5) + ',' + str(mq6) + ',' + str(numfemale) + ',' +  str(perfemale) + ',' + str(fq1)+ ',' + str(fq2) + ',' + str(fq3) + ',' + str(fq4) + ',' + str(fq5) + ',' + str(fq6)
 	
 	# Prints output to console so we can see our script is working
 	# `with... as myfile` appends each line to with \r\n so we can work with both unix and windows
 
 	print results
+	print h.heap()
 
 	with open(output_file, 'ab+') as myfile:
 	    myfile.write(results + '\r\n')
