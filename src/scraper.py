@@ -17,8 +17,10 @@ import datetime
 import subprocess
 import gc
 
-from guppy import hpy
-h = hpy()
+'''
+#from guppy import hpy 	# This is used only if you want to see where memory is allocated
+#h = hpy()				# I woudn't uncomment unless you want to see your memory double
+'''						# Or if you want to see memory usage
 
 vrdb = 'active.txt'
 
@@ -84,6 +86,8 @@ def getInformation(location, identifier, output_file):
 
 	master_list = []
 	ages = []
+	print ages
+	print master_list
 	nummale = 0
 	numfemale = 0
 
@@ -168,7 +172,10 @@ def getInformation(location, identifier, output_file):
 	# `with... as myfile` appends each line to with \r\n so we can work with both unix and windows
 
 	print results
-	print h.heap()
+	
+	# h.heap() used to see where memory is allocated
+
+	#print h.heap()
 
 	with open(output_file, 'ab+') as myfile:
 	    myfile.write(results + '\r\n')
