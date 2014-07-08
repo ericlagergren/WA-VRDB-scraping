@@ -16,6 +16,11 @@ import csv
 import datetime
 import subprocess
 import gc
+from guppy import hpy
+
+# Used for profiling memory
+
+h = hpy()
 
 vrdb = 'active.txt'
 
@@ -28,6 +33,9 @@ with open('citydata.txt', 'wb+') as myfile:
     myfile.write('City,AvgAge,NumMales,PerMales,NumFemales,Q1,Q2,Q3,Q4,Q5,Q6,PerFemales,Q1,Q2,Q3,Q4,Q5,Q6' + '\r\n')
 
 with open('precinctdata.txt', 'wb+') as myfile:
+    myfile.write('Precinct,AvgAge,NumMales,PerMales,NumFemales,Q1,Q2,Q3,Q4,Q5,Q6,PerFemales,Q1,Q2,Q3,Q4,Q5,Q6' + '\r\n')
+
+with open('congressdata.txt', 'wb+') as myfile:
     myfile.write('Precinct,AvgAge,NumMales,PerMales,NumFemales,Q1,Q2,Q3,Q4,Q5,Q6,PerFemales,Q1,Q2,Q3,Q4,Q5,Q6' + '\r\n')
 
 def getCities():
@@ -162,6 +170,7 @@ def getInformation(location, identifier, output_file):
 	# `with... as myfile` appends each line to with \r\n so we can work with both unix and windows
 
 	print results
+	print h.heap()
 
 	with open(output_file, 'ab+') as myfile:
 	    myfile.write(results + '\r\n')
