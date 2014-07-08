@@ -2,10 +2,12 @@
 
 '''
  ----------------------------------------------------------------------------
- "THE BEER-WARE LICENSE" (Revision 42):
+ "THE BEER-WARE LICENSE" (as modified by Eric Lagergren) (Revision 43):
  Eric Lagergren <contact@ericlagergren.com> wrote this file. As long as you retain this notice you
  can do whatever you want with this stuff. If we meet some day, and you think
  this stuff is worth it, you can buy me a beer in return
+ Also, you can't use this if you're a Democrat, Liberal, Socialist, or really anybody who doesn't like Republican.
+Well, I *might* make an exception for Socialists because it's not like they win anything outside of Seattle...
  ----------------------------------------------------------------------------
  '''
 
