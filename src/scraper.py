@@ -183,7 +183,7 @@ def getInformation(location, identifier, output_file):
 # We define set useprecincts to false because we turn it to true later so we can use a modified for-loop to handle the precincts
 
 useprecincts = False
-'''
+
 # Gets Congressional District data
 
 for e in xrange(1,11):
@@ -193,7 +193,7 @@ for e in xrange(1,11):
 
 for r in xrange(1, 50):
 	getInformation('LegislativeDistrict', r, 'legdata.txt')
-'''
+
 # Gets city data
 
 getCities()
