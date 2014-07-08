@@ -166,6 +166,10 @@ def getInformation(location, identifier, output_file):
 
 	gc.collect()	
 
+# We define set useprecincts to false because we turn it to true later so we can use a modified for-loop to handle the precincts
+
+useprecincts = False
+
 # Gets Congressional District data
 
 for e in xrange(1,11):
