@@ -183,7 +183,7 @@ def getInformation(location, identifier, output_file):
 # We define set useprecincts to false because we turn it to true later so we can use a modified for-loop to handle the precincts
 
 useprecincts = False
-
+'''
 # Gets Congressional District data
 
 for e in xrange(1,11):
@@ -193,11 +193,11 @@ for e in xrange(1,11):
 
 for r in xrange(1, 50):
 	getInformation('LegislativeDistrict', r, 'legdata.txt')
-
+'''
 # Gets city data
 
 getCities()
-sortLists(getCities, 'citylist.txt', './shellsubprocess.sh')
+sortLists(getCities(), 'citylist.txt', './shellsubprocess.sh')
 listofcities = [line.rstrip() for line in open('citylist.txt')]
 
 for i in listofcities:
@@ -205,7 +205,7 @@ for i in listofcities:
 # Gets precinct data
 
 getPrecincts()
-sortLists(getPrecincts, 'precinctlist.txt', './subshellprecincts.sh')
+sortLists(getPrecincts(), 'precinctlist.txt', './subshellprecincts.sh')
 listofprecincts = [line.rstrip() for line in open('precincts.txt')]
 useprecincts = True
 
