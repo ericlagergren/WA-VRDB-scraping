@@ -16,11 +16,18 @@ import csv
 import datetime
 import subprocess
 import gc
-from guppy import hpy
 
-# Used for profiling memory
+import cherrypy
+import dowser
 
-h = hpy()
+def start(port):
+    cherrypy.tree.mount(dowser.Root())
+    cherrypy.config.update({
+        'environment': 'embedded',
+        'server.socket_port': port
+    })
+    cherrypy.server.quickstart()
+    cherrypy.engine.start(blocking=False)
 
 vrdb = 'active.txt'
 
@@ -170,7 +177,6 @@ def getInformation(location, identifier, output_file):
 	# `with... as myfile` appends each line to with \r\n so we can work with both unix and windows
 
 	print results
-	print h.heap()
 
 	with open(output_file, 'ab+') as myfile:
 	    myfile.write(results + '\r\n')
