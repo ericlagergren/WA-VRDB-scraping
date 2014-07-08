@@ -20,13 +20,13 @@ vrdb = 'active.txt'
 # Write headings to three output files
 
 with open('legdata.txt', 'wb+') as myfile:
-    myfile.write('LegDist,AvgAge,NumMales,PerMales,NumFemales,PerFemales' + '\r\n')
+    myfile.write('LegDist,AvgAge,NumMales,PerMales,Q1,Q2,Q3,Q4,Q5,Q6,NumFemales,PerFemales,Q1,Q2,Q3,Q4,Q5,Q6' + '\r\n')
 
 with open('citydata.txt', 'wb+') as myfile:
-    myfile.write('City,AvgAge,NumMales,PerMales,NumFemales,PerFemales' + '\r\n')
+    myfile.write('City,AvgAge,NumMales,PerMales,NumFemales,Q1,Q2,Q3,Q4,Q5,Q6,PerFemales,Q1,Q2,Q3,Q4,Q5,Q6' + '\r\n')
 
 with open('precinctdata.txt', 'wb+') as myfile:
-    myfile.write('Precinct,AvgAge,NumMales,PerMales,NumFemales,PerFemales' + '\r\n')
+    myfile.write('Precinct,AvgAge,NumMales,PerMales,NumFemales,Q1,Q2,Q3,Q4,Q5,Q6,PerFemales,Q1,Q2,Q3,Q4,Q5,Q6' + '\r\n')
 
 def getCities():
 
@@ -79,6 +79,23 @@ def getInformation(location, identifier, output_file):
 	nummale = 0
 	numfemale = 0
 
+	# Here we have the different quantiles
+	# m denotes male, f denotes female
+
+	fq1 = 0 # 18 - 25
+	fq2 = 0 # 26 - 35
+	fq3 = 0 # 36 - 45
+	fq4 = 0 # 46 - 55
+	fq5 = 0 # 56 - 65
+	fq6 = 0 # 66 +
+
+	mq1 = 0 # 18 - 25
+	mq2 = 0 # 26 - 35
+	mq3 = 0 # 36 - 45
+	mq4 = 0 # 46 - 55
+	mq5 = 0 # 56 - 65
+	mq6 = 0 # 66 +
+
 	if useprecincts != True:
 		for row in reader:
 			if row[location] == str(identifier):	
@@ -96,12 +113,36 @@ def getInformation(location, identifier, output_file):
 
 	for x,value in enumerate(master_list):
 		dates = datetime.datetime.now() - datetime.datetime.strptime(value['Birthdate'], '%m/%d/%Y')
-		ages.append(datetime.timedelta.total_seconds(dates) / 31556952)
+		age = datetime.timedelta.total_seconds(dates) / 31556952
+		ages.append(age)
 		if value['Gender'] == "M":
 			nummale += 1
+			if 18 <= age < 26:
+				mq1 += 1
+			if 26 <= age < 35:
+				mq2 += 1
+			if 36 <= age < 45:
+				mq3 += 1
+			if 46 <= age < 55:
+				mq4 += 1
+			if 56 <= age < 65:
+				mq5 += 1
+			if 66 <= age:
+				mq6 += 1
 		if value['Gender'] == "F":
 			numfemale += 1
-
+			if 18 <= age < 26:
+				fq1 += 1
+			if 26 <= age < 35:
+				fq2 += 1
+			if 36 <= age < 45:
+				fq3 += 1
+			if 46 <= age < 55:
+				fq4 += 1
+			if 56 <= age < 65:
+				fq5 += 1
+			if 66 <= age:
+				fq6 += 1
 
 	# This defines the ages. Takes the sum of all the ages and divides it by the total values
 	# It also takes the total number of each gender and divides that by the total
@@ -113,7 +154,7 @@ def getInformation(location, identifier, output_file):
 	perfemale = '{percent:.3%}'.format(percent=numfemale/total_values)
 	permale = '{percent:.3%}'.format(percent=nummale/total_values)
 
-	results = str(identifier) + ',' + str(average_age) + ',' + str(nummale) + ',' + str(permale) + ',' + str(numfemale) +',' +  str(perfemale)
+	results = str(identifier) + ',' + str(average_age) + ',' + str(nummale) + ',' + str(permale) + ',' + str(mq1)+ ',' + str(mq2) + ',' + str(mq3) + ',' + str(mq4) + ',' + str(mq5) + ',' + str(mq6) + ',' + str(numfemale) + ',' +  str(perfemale) + str(fq1)+ ',' + str(fq2) + ',' + str(fq3) + ',' + str(fq4) + ',' + str(fq5) + ',' + str(fq6)
 	
 	# Prints output to console so we can see our script is working
 	# `with... as myfile` appends each line to with \r\n so we can work with both unix and windows
@@ -125,10 +166,15 @@ def getInformation(location, identifier, output_file):
 
 	gc.collect()	
 
+# Gets Congressional District data
+
+for e in xrange(1,11):
+	getInformation('CongressionalDistrict', e, 'congressdata.txt')
+
 # Gets Legislative District data
 
-for i in xrange(1, 50):
-	getInformation('LegislativeDistrict', i, 'legdata.txt')
+for r in xrange(1, 50):
+	getInformation('LegislativeDistrict', r, 'legdata.txt')
 
 # Gets city data
 
@@ -136,8 +182,8 @@ getCities()
 sortLists(getCities, 'citylist.txt', './shellsubprocess.sh')
 listofcities = [line.rstrip() for line in open('citylist.txt')]
 
-for v in listofcities:
-	getInformation('RegCity', v, 'citydata.txt')
+for i in listofcities:
+	getInformation('RegCity', i, 'citydata.txt')
 # Gets precinct data
 
 getPrecincts()
@@ -148,5 +194,5 @@ useprecincts = True
 # I'm passing 'a' because getInformation takes 3 args when I only need to pass two
 # I suppose I *could* implement *args, but this works for such a simple scraper script
 
-for y in listofprecincts:
-	getInformation('a', y, 'precinctdata.txt')
+for c in listofprecincts:
+	getInformation('a', c, 'precinctdata.txt')
