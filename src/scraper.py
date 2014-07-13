@@ -184,6 +184,12 @@ def getInformation(input_file, column, output_file):
 
 	results = dict((k, [identifier[k], nummale.get(k), mq1.get(k), mq2.get(k), mq3.get(k), mq4.get(k), mq5.get(k), mq6.get(k), numfemale.get(k), fq1.get(k), fq2.get(k), fq3.get(k), fq4.get(k), fq5.get(k), fq6.get(k)]) for k in identifier)
 	
+	heading = (column + 'AverageAge,NumberMale,Q1,Q2,Q3,Q4,Q5,Q6,NumFemale,Q1,'
+						'Q2,Q3,Q4,Q5,Q6'
+						'\n')
+
+	write_file(output_file, 'ab+', heading)
+
 	for key, value in results.items():
 		csv.writer(open(output_file, 'ab+')).writerow([key, value])
 
@@ -209,3 +215,5 @@ getInformation('citylist.txt', 'RegCity', 'cityages.txt')
 precinct = True
 
 getInformation('precincts.txt', 'Precinct', 'precinctages.txt')
+
+subprocess.call(['./final.sh'])
