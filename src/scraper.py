@@ -35,14 +35,14 @@ def getPrecincts():
 
 	reader = csv.DictReader(open(vrdb, 'rb'), delimiter='\t')
 
-	precincts = []
+	#precincts = []
 
 	# In Washington counties can use their own precinct codes which are the county code (e.g. King is KI) + precinct code + precinct part
 	# To keep each unique we concat each part with a '+' -- this keeps the values separate but still unique
 
-	precincts.append(str(entry.get('CountyCode')) + '+'  + str(entry.get('PrecinctCode')) + '+' + str(entry.get('PrecinctPart')) for entry in reader if entry['PrecinctCode'])
+	return [str(entry.get('CountyCode')) + '+'  + str(entry.get('PrecinctCode')) + '+' + str(entry.get('PrecinctPart')) for entry in reader if entry['PrecinctCode']]
 
-	write_file('precincts.txt', 'ab+', str(precincts))
+	#write_file('precincts.txt', 'ab+', str(precincts))
 						
 def sortLists(function, output_file, shell_script):
 
@@ -91,6 +91,7 @@ def getInformation(input_file, column, output_file):
 				i = (str(entry['CountyCode']) + '+' + \
 					str(entry['PrecinctCode']) + '+' + \
 					str(entry['PrecinctPart']))
+				print i
 				try:
 					identifier[i] += age
 					identifier_length[i] += 1
@@ -187,7 +188,15 @@ def getInformation(input_file, column, output_file):
 		csv.writer(open(output_file, 'ab+')).writerow([key, value])
 
 sortLists(getCities(), 'citylist.txt', './shellsubprocess.sh')
-sortLists(getPrecincts(), 'precinctlist.txt', './subshellprecincts.sh')
+sortLists(getPrecincts(), 'precincts.txt', './subshellprecincts.sh')
+
+# Writes the CDs and LDs to files because they're predefined
+
+for x in range(1,50):
+	write_file('ldlist.txt', 'ab+', '%s\n' % x)
+
+for x in range(1,11):
+	write_file('cdlist.txt', 'ab+', '%s\n' % x)
 
 # We use `precinct` as a flag to let us know when to use the first `if` portion in our getInformation method
 
