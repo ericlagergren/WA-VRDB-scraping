@@ -11,46 +11,25 @@ Well, I *might* make an exception for Socialists because it's not like they win 
  ----------------------------------------------------------------------------
  '''
 
-from __future__ import division
+from cStringIO import StringIO
 import csv
 import datetime
 import subprocess
-import gc
-
-'''
-#from guppy import hpy 	# This is used only if you want to see where memory is allocated
-#h = hpy()				# I woudn't uncomment unless you want to see your memory double
-'''						# Or if you want to see memory usage
+import sys
 
 vrdb = 'active.txt'
 
-# Write headings to three output files
-
-with open('legdata.txt', 'wb+') as myfile:
-    myfile.write('LegDist,AvgAge,NumMales,PerMales,Q1,Q2,Q3,Q4,Q5,Q6,NumFemales,PerFemales,Q1,Q2,Q3,Q4,Q5,Q6' + '\r\n')
-
-with open('citydata.txt', 'wb+') as myfile:
-    myfile.write('City,AvgAge,NumMales,PerMales,NumFemales,Q1,Q2,Q3,Q4,Q5,Q6,PerFemales,Q1,Q2,Q3,Q4,Q5,Q6' + '\r\n')
-
-with open('precinctdata.txt', 'wb+') as myfile:
-    myfile.write('Precinct,AvgAge,NumMales,PerMales,NumFemales,Q1,Q2,Q3,Q4,Q5,Q6,PerFemales,Q1,Q2,Q3,Q4,Q5,Q6' + '\r\n')
-
-with open('congressdata.txt', 'wb+') as myfile:
-    myfile.write('Precinct,AvgAge,NumMales,PerMales,NumFemales,Q1,Q2,Q3,Q4,Q5,Q6,PerFemales,Q1,Q2,Q3,Q4,Q5,Q6' + '\r\n')
+def write_file(filename, mode, data):
+	with open(filename, mode) as f:
+		f.write(data)
 
 def getCities():
 
 	reader = csv.DictReader(open(vrdb, 'rb'), delimiter='\t')
 
-	cities = []
+	# Gets all cities in the voter reg db
 
-	# Appends all the data from each person inside a specific city
-
-	for row in reader:
-		if row['RegCity']:
-			cities.append(row.get('RegCity'))
-
-	return cities
+	return [entry.get('RegCity') for entry in reader if entry['RegCity']]
 
 def getPrecincts():
 
@@ -61,156 +40,163 @@ def getPrecincts():
 	# In Washington counties can use their own precinct codes which are the county code (e.g. King is KI) + precinct code + precinct part
 	# To keep each unique we concat each part with a '+' -- this keeps the values separate but still unique
 
-	for row in reader:
-		if row['PrecinctCode']:
-			precincts.append(str(row.get('CountyCode')) + '+'  + str(row.get('PrecinctCode')) + '+' + str(row.get('PrecinctPart')))
+	precincts.append(str(entry.get('CountyCode')) + '+'  + str(entry.get('PrecinctCode')) + '+' + str(entry.get('PrecinctPart')) for entry in reader if entry['PrecinctCode'])
 
-	with open('precincts.txt', 'ab+') as myfile:
-	    myfile.write(str(precincts))
-
+	write_file('precincts.txt', 'ab+', str(precincts))
+						
 def sortLists(function, output_file, shell_script):
 
-	numcities = function
-	numcities = str(numcities)
+	num_cities = function
+	num_cities = str(num_cities)
 
-	with open(output_file, 'ab+') as myfile:
-		myfile.write(numcities)
+	write_file(output_file, 'ab+', num_cities)
 
 	subprocess.call([shell_script])
 
-def getInformation(location, identifier, output_file):
+def getInformation(input_file, column, output_file):
 
-	# Opens VRDB and parses it line by line
-
-	reader = csv.DictReader(open(vrdb, 'rb'), delimiter= '\t')
-
-	master_list = []
-	ages = []
-	nummale = 0
-	numfemale = 0
+	identifier = dict.fromkeys([line.rstrip() for line in open(input_file)], 0)
+	identifier_length = dict.fromkeys([line.rstrip() for line in open(input_file)], 0)
+	nummale = dict.fromkeys([line.rstrip() for line in open(input_file)], 0)
+	numfemale = dict.fromkeys([line.rstrip() for line in open(input_file)], 0)
 
 	# Here we have the different quantiles
 	# m denotes male, f denotes female
 
-	fq1 = 0 # 18 - 25
-	fq2 = 0 # 26 - 35
-	fq3 = 0 # 36 - 45
-	fq4 = 0 # 46 - 55
-	fq5 = 0 # 56 - 65
-	fq6 = 0 # 66 +
+	fq1 = dict.fromkeys([line.rstrip() for line in open(input_file)], 0) # 18 - 25
+	fq2 = dict.fromkeys([line.rstrip() for line in open(input_file)], 0) # 26 - 35
+	fq3 = dict.fromkeys([line.rstrip() for line in open(input_file)], 0) # 36 - 45
+	fq4 = dict.fromkeys([line.rstrip() for line in open(input_file)], 0) # 46 - 55
+	fq5 = dict.fromkeys([line.rstrip() for line in open(input_file)], 0) # 56 - 65
+	fq6 = dict.fromkeys([line.rstrip() for line in open(input_file)], 0) # 66 +
 
-	mq1 = 0 # 18 - 25
-	mq2 = 0 # 26 - 35
-	mq3 = 0 # 36 - 45
-	mq4 = 0 # 46 - 55
-	mq5 = 0 # 56 - 65
-	mq6 = 0 # 66 +
+	mq1 = dict.fromkeys([line.rstrip() for line in open(input_file)], 0) # 18 - 25
+	mq2 = dict.fromkeys([line.rstrip() for line in open(input_file)], 0) # 26 - 35
+	mq3 = dict.fromkeys([line.rstrip() for line in open(input_file)], 0) # 36 - 45
+	mq4 = dict.fromkeys([line.rstrip() for line in open(input_file)], 0) # 46 - 55
+	mq5 = dict.fromkeys([line.rstrip() for line in open(input_file)], 0) # 56 - 65
+	mq6 = dict.fromkeys([line.rstrip() for line in open(input_file)], 0) # 66 +
 
-	if useprecincts != True:
-		for row in reader:
-			if row[location] == str(identifier):	
-				master_list.append(row)
+	with open(vrdb, 'r') as myfile:
+		file_data = myfile.read()
 
-	if useprecincts:
-		for row in reader:
-			if str(row['CountyCode']) + '+' + str(row['PrecinctCode']) + '+' + str(row['PrecinctPart']) == identifier:
-				master_list.append(row)
+	if precinct == True:
+		for entry in csv.DictReader(StringIO(file_data), delimiter='\t'):
+			column = str(entry['CountyCode']) + '+' + \
+					str(entry['PrecinctCode']) + '+' + \
+					str(entry['PrecinctPart'])
+			if entry['Birthdate']:
+				dates = datetime.datetime.now() - datetime.datetime.strptime(entry['Birthdate'], '%m/%d/%Y')
+				age = datetime.timedelta.total_seconds(dates) / 31556952
+				i = (str(entry['CountyCode']) + '+' + \
+					str(entry['PrecinctCode']) + '+' + \
+					str(entry['PrecinctPart']))
+				try:
+					identifier[i] += age
+					identifier_length[i] += 1
+				except KeyError:
+					sys.exc_clear()
+				if entry['Gender'] == "M":
+					try:
+						nummale[i] += 1
+						if 18 <= age < 26:
+							mq1[i] += 1
+						elif 26 <= age < 35:
+							mq2[i] += 1
+						elif 36 <= age < 45:
+							mq3[i] += 1
+						elif 46 <= age < 55:
+							mq4[i] += 1
+						elif 56 <= age < 65:
+							mq5[i] += 1
+						elif 66 <= age:
+							mq6[i] += 1
+					except KeyError:
+						sys.exc_clear()
+				elif entry['Gender'] == "F":
+					try:
+						numfemale[i] += 1
+						if 18 <= age < 26:
+							fq1[i] += 1
+						elif 26 <= age < 35:
+							fq2[i] += 1
+						elif 36 <= age < 45:
+							fq3[i] += 1
+						elif 46 <= age < 55:
+							fq4[i] += 1
+						elif 56 <= age < 65:
+							fq5[i] += 1
+						elif 66 <= age:
+							fq6[i] += 1
+					except KeyError:
+						sys.exc_clear()
+	else:
+		for entry in csv.DictReader(StringIO(file_data), delimiter='\t'):
+			if entry[column]:
+				if entry['Birthdate']:
+					dates = datetime.datetime.now() - datetime.datetime.strptime(entry['Birthdate'], '%m/%d/%Y')
+					age = datetime.timedelta.total_seconds(dates) / 31556952
+					i = entry[column]
+					try:
+						identifier[i] += age
+						identifier_length[i] += 1
+					except KeyError:
+						sys.exc_clear()
+					if entry['Gender'] == "M":
+						try:
+							nummale[i] += 1
+							if 18 <= age < 26:
+								mq1[i] += 1
+							elif 26 <= age < 35:
+								mq2[i] += 1
+							elif 36 <= age < 45:
+								mq3[i] += 1
+							elif 46 <= age < 55:
+								mq4[i] += 1
+							elif 56 <= age < 65:
+								mq5[i] += 1
+							elif 66 <= age:
+								mq6[i] += 1
+						except KeyError:
+							sys.exc_clear()
+					elif entry['Gender'] == "F":
+						try:
+							numfemale[i] += 1
+							if 18 <= age < 26:
+								fq1[i] += 1
+							elif 26 <= age < 35:
+								fq2[i] += 1
+							elif 36 <= age < 45:
+								fq3[i] += 1
+							elif 46 <= age < 55:
+								fq4[i] += 1
+							elif 56 <= age < 65:
+								fq5[i] += 1
+							elif 66 <= age:
+								fq6[i] += 1
+						except KeyError:
+							sys.exc_clear()
 
-	# For each person in our specific LD/city/precinct, get their information and append it to the correct lists
-	# 31556952 is used because it's the representation of 365.2425 days in seconds. 
-	# 365.2425 is used because there's only 97 leap years every 400 years, not 100 (Gregorian calendar)
-	# We also get the number of each gender
+	for key in identifier:
+		if key in identifier_length:
+			identifier[key] = identifier[key] / identifier_length[key]
 
-	for x,value in enumerate(master_list):
-		dates = datetime.datetime.now() - datetime.datetime.strptime(value['Birthdate'], '%m/%d/%Y')
-		age = datetime.timedelta.total_seconds(dates) / 31556952
-		ages.append(age)
-		if value['Gender'] == "M":
-			nummale += 1
-			if 18 <= age < 26:
-				mq1 += 1
-			if 26 <= age < 35:
-				mq2 += 1
-			if 36 <= age < 45:
-				mq3 += 1
-			if 46 <= age < 55:
-				mq4 += 1
-			if 56 <= age < 65:
-				mq5 += 1
-			if 66 <= age:
-				mq6 += 1
-		if value['Gender'] == "F":
-			numfemale += 1
-			if 18 <= age < 26:
-				fq1 += 1
-			if 26 <= age < 35:
-				fq2 += 1
-			if 36 <= age < 45:
-				fq3 += 1
-			if 46 <= age < 55:
-				fq4 += 1
-			if 56 <= age < 65:
-				fq5 += 1
-			if 66 <= age:
-				fq6 += 1
-
-	# This defines the ages. Takes the sum of all the ages and divides it by the total values
-	# It also takes the total number of each gender and divides that by the total
-	# This gives us a percentage with 3 decimal places
-
-	total_values = len(ages)
-	average_age = sum(ages) / total_values
-
-	perfemale = '{percent:.3%}'.format(percent=numfemale/total_values)
-	permale = '{percent:.3%}'.format(percent=nummale/total_values)
-
-	results = str(identifier) + ',' + str(average_age) + ',' + str(nummale) + ',' + str(permale) + ',' + str(mq1)+ ',' + str(mq2) + ',' + str(mq3) + ',' + str(mq4) + ',' + str(mq5) + ',' + str(mq6) + ',' + str(numfemale) + ',' +  str(perfemale) + ',' + str(fq1)+ ',' + str(fq2) + ',' + str(fq3) + ',' + str(fq4) + ',' + str(fq5) + ',' + str(fq6)
+	results = dict((k, [identifier[k], nummale.get(k), mq1.get(k), mq2.get(k), mq3.get(k), mq4.get(k), mq5.get(k), mq6.get(k), numfemale.get(k), fq1.get(k), fq2.get(k), fq3.get(k), fq4.get(k), fq5.get(k), fq6.get(k)]) for k in identifier)
 	
-	# Prints output to console so we can see our script is working
-	# `with... as myfile` appends each line to with \r\n so we can work with both unix and windows
+	for key, value in results.items():
+		csv.writer(open(output_file, 'ab+')).writerow([key, value])
 
-	print results
-	
-	# h.heap() used to see where memory is allocated
-
-	#print h.heap()
-
-	with open(output_file, 'ab+') as myfile:
-	    myfile.write(results + '\r\n')
-
-	gc.collect()	
-
-# We define set useprecincts to false because we turn it to true later so we can use a modified for-loop to handle the precincts
-
-useprecincts = False
-
-# Gets Congressional District data
-
-for e in xrange(1,11):
-	getInformation('CongressionalDistrict', e, 'congressdata.txt')
-
-# Gets Legislative District data
-
-for r in xrange(1, 50):
-	getInformation('LegislativeDistrict', r, 'legdata.txt')
-
-# Gets city data
-
-getCities()
 sortLists(getCities(), 'citylist.txt', './shellsubprocess.sh')
-listofcities = [line.rstrip() for line in open('citylist.txt')]
-
-for i in listofcities:
-	getInformation('RegCity', i, 'citydata.txt')
-# Gets precinct data
-
-getPrecincts()
 sortLists(getPrecincts(), 'precinctlist.txt', './subshellprecincts.sh')
-listofprecincts = [line.rstrip() for line in open('precincts.txt')]
-useprecincts = True
 
-# I'm passing 'a' because getInformation takes 3 args when I only need to pass two
-# I suppose I *could* implement *args, but this works for such a simple scraper script
+# We use `precinct` as a flag to let us know when to use the first `if` portion in our getInformation method
 
-for c in listofprecincts:
-	getInformation('a', c, 'precinctdata.txt')
+precinct = False
+
+getInformation('ldlist.txt', 'LegislativeDistrict', 'ldages.txt')
+getInformation('cdlist.txt', 'CongressionalDistrict', 'cdages.txt')
+getInformation('citylist.txt', 'RegCity', 'cityages.txt')
+
+precinct = True
+
+getInformation('precincts.txt', 'Precinct', 'precinctages.txt')
