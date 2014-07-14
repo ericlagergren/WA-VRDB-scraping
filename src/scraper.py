@@ -2,27 +2,51 @@
 
 '''
  ----------------------------------------------------------------------------
- "THE BEER-WARE LICENSE" (as modified by Eric Lagergren) (Revision 43):
+ "THE BEER-WARE LICENSE" (as modified by Eric Lagergren) (Revision 43.69):
  Eric Lagergren <contact@ericlagergren.com> wrote this file. As long as you retain this notice you
  can do whatever you want with this stuff. If we meet some day, and you think
  this stuff is worth it, you can buy me a beer in return
  Also, you can't use this if you're a Democrat, Liberal, Socialist, or really anybody who doesn't like Republican.
 Well, I *might* make an exception for Socialists because it's not like they win anything outside of Seattle...
  ----------------------------------------------------------------------------
- '''
+'''
 
+import argparse
 from cStringIO import StringIO
 import csv
+from functools import wraps
 import datetime
 import subprocess
 import sys
 
-vrdb = 'active.txt'
+init = datetime.datetime.now()
+
+parser = argparse.ArgumentParser(description='Sorts Washington\'s VRDB by Leg.'
+								' District, Con. District, city, and precinct', 
+								epilog='e.g. ./scraper.py "201205Delimited '
+								'Active.txt"')
+parser.add_argument('filename', type=str, help="Path to WA VRDB")
+args = parser.parse_args()
+
+# vrdb takes cli file input, e.g. script.py file.txt
+
+vrdb = args.filename
+
+def timed(f):
+  @wraps(f)
+  def wrapper(*args, **kwds):
+    start = datetime.datetime.now()
+    result = f(*args, **kwds)
+    elapsed = datetime.datetime.now() - start
+    print "> %s took %s to finish" % (f.__name__, elapsed)
+    return result
+  return wrapper
 
 def write_file(filename, mode, data):
 	with open(filename, mode) as f:
 		f.write(data)
 
+@timed
 def getCities():
 
 	reader = csv.DictReader(open(vrdb, 'rb'), delimiter='\t')
@@ -31,19 +55,19 @@ def getCities():
 
 	return [entry.get('RegCity') for entry in reader if entry['RegCity']]
 
+@timed
 def getPrecincts():
 
 	reader = csv.DictReader(open(vrdb, 'rb'), delimiter='\t')
 
-	#precincts = []
-
 	# In Washington counties can use their own precinct codes which are the county code (e.g. King is KI) + precinct code + precinct part
 	# To keep each unique we concat each part with a '+' -- this keeps the values separate but still unique
 
-	return [str(entry.get('CountyCode')) + '+'  + str(entry.get('PrecinctCode')) + '+' + str(entry.get('PrecinctPart')) for entry in reader if entry['PrecinctCode']]
+	return [str(entry.get('CountyCode')) + '+'  + str(entry.get('PrecinctCode')) 
+			+ '+' + str(entry.get('PrecinctPart')) for entry in reader if 
+			entry['PrecinctCode']]
 
-	#write_file('precincts.txt', 'ab+', str(precincts))
-						
+@timed						
 def sortLists(function, output_file, shell_script):
 
 	num_cities = function
@@ -53,7 +77,10 @@ def sortLists(function, output_file, shell_script):
 
 	subprocess.call([shell_script])
 
+@timed
 def getInformation(input_file, column, output_file):
+
+	print 'Parsing ' + column + ' data...'
 
 	identifier = dict.fromkeys([line.rstrip() for line in open(input_file)], 0)
 	identifier_length = dict.fromkeys([line.rstrip() for line in open(input_file)], 0)
@@ -86,12 +113,12 @@ def getInformation(input_file, column, output_file):
 					str(entry['PrecinctCode']) + '+' + \
 					str(entry['PrecinctPart'])
 			if entry['Birthdate']:
-				dates = datetime.datetime.now() - datetime.datetime.strptime(entry['Birthdate'], '%m/%d/%Y')
+				dates = datetime.datetime.now() - datetime.datetime.strptime(
+						entry['Birthdate'], '%m/%d/%Y')
 				age = datetime.timedelta.total_seconds(dates) / 31556952
 				i = (str(entry['CountyCode']) + '+' + \
 					str(entry['PrecinctCode']) + '+' + \
 					str(entry['PrecinctPart']))
-				print i
 				try:
 					identifier[i] += age
 					identifier_length[i] += 1
@@ -135,7 +162,8 @@ def getInformation(input_file, column, output_file):
 		for entry in csv.DictReader(StringIO(file_data), delimiter='\t'):
 			if entry[column]:
 				if entry['Birthdate']:
-					dates = datetime.datetime.now() - datetime.datetime.strptime(entry['Birthdate'], '%m/%d/%Y')
+					dates = datetime.datetime.now() - datetime.datetime.strptime(
+							entry['Birthdate'], '%m/%d/%Y')
 					age = datetime.timedelta.total_seconds(dates) / 31556952
 					i = entry[column]
 					try:
@@ -182,7 +210,10 @@ def getInformation(input_file, column, output_file):
 		if key in identifier_length:
 			identifier[key] = identifier[key] / identifier_length[key]
 
-	results = dict((k, [identifier[k], nummale.get(k), mq1.get(k), mq2.get(k), mq3.get(k), mq4.get(k), mq5.get(k), mq6.get(k), numfemale.get(k), fq1.get(k), fq2.get(k), fq3.get(k), fq4.get(k), fq5.get(k), fq6.get(k)]) for k in identifier)
+	results = dict((k, [identifier[k], nummale.get(k), mq1.get(k), mq2.get(k),
+					mq3.get(k), mq4.get(k), mq5.get(k), mq6.get(k),
+					numfemale.get(k), fq1.get(k), fq2.get(k), fq3.get(k), 
+					fq4.get(k), fq5.get(k), fq6.get(k)]) for k in identifier)
 	
 	heading = (column + 'AverageAge,NumberMale,Q1,Q2,Q3,Q4,Q5,Q6,NumFemale,Q1,'
 						'Q2,Q3,Q4,Q5,Q6'
@@ -190,23 +221,41 @@ def getInformation(input_file, column, output_file):
 
 	write_file(output_file, 'ab+', heading)
 
+	print 'Writing ' + column + ' data to ' + output_file + '...'
+
 	for key, value in results.items():
 		csv.writer(open(output_file, 'ab+')).writerow([key, value])
+	
+	print 'Done writing ' + column + ' data to ' + output_file + '.'
+
+print 'Fetching data... '
 
 sortLists(getCities(), 'citylist.txt', './shellsubprocess.sh')
+
+print '1/4: Cities fetched.'
+
 sortLists(getPrecincts(), 'precincts.txt', './subshellprecincts.sh')
+
+print '2/4: Precincts fetched.'
 
 # Writes the CDs and LDs to files because they're predefined
 
 for x in range(1,50):
 	write_file('ldlist.txt', 'ab+', '%s\n' % x)
 
+print '3/4: Legislative Districts fetched.'
+
 for x in range(1,11):
 	write_file('cdlist.txt', 'ab+', '%s\n' % x)
+
+print "Done fetching data."
 
 # We use `precinct` as a flag to let us know when to use the first `if` portion in our getInformation method
 
 precinct = False
+
+parse_start = datetime.datetime.now() - init
+print 'Parsing string... ' + str(parse_start)
 
 getInformation('ldlist.txt', 'LegislativeDistrict', 'ldages.txt')
 getInformation('cdlist.txt', 'CongressionalDistrict', 'cdages.txt')
@@ -215,5 +264,8 @@ getInformation('citylist.txt', 'RegCity', 'cityages.txt')
 precinct = True
 
 getInformation('precincts.txt', 'Precinct', 'precinctages.txt')
+
+end_start = datetime.datetime.now() - init
+print 'Cleaning up files... ' + str(end_start)
 
 subprocess.call(['./final.sh'])
