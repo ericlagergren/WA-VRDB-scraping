@@ -6,10 +6,7 @@
  Eric Lagergren <contact@ericlagergren.com> wrote this file. As long as you
  retain this notice you can do whatever you want with this stuff. If we meet
  some day, and you think this stuff is worth it, you can buy me a beer in
- return. Also, you can't use this if you're a Democrat, Liberal, Socialist,
- or really anybody who doesn't like Republicans. Well, I *might* make an
- exception for Socialists because it's not like they win anything outside of
- Seattle...
+ return.
  ----------------------------------------------------------------------------
 '''
 
@@ -74,7 +71,10 @@ def getPrecincts():
     values separate but still unique
     '''
 
-    return [str(entry.get('CountyCode')) + '+' + str(entry.get('PrecinctCode'))
+    # return [str(entry.get('CountyCode')) + '+' + str(entry.get('PrecinctCode'))
+    #        for entry in reader if entry['PrecinctCode']]
+
+    return ['{0}+{1}'.format(entry.get('CountyCode'), entry.get('PrecinctCode'))
             for entry in reader if entry['PrecinctCode']]
 
 
@@ -92,7 +92,14 @@ def sortLists(function, output_file, shell_script):
 @timed
 def getInformation(input_file, column, output_file):
 
-    print 'Parsing ' + column + ' data...'
+    prefix = column
+
+    if precinct is True:
+        prefix = 'Precinct'
+    else:
+        pass
+
+    print 'Parsing %s data...' % prefix
 
     identifier = dict.fromkeys([line.rstrip() for line in open(input_file)], 0)
     identifier_length = dict.fromkeys(
@@ -134,8 +141,8 @@ def getInformation(input_file, column, output_file):
 
     for entry in csv.DictReader(StringIO(file_data), delimiter='\t'):
         if precinct is True:
-            i = column = str(entry['CountyCode']) + '+' + \
-                str(entry['PrecinctCode'])
+            i = '{0}+{1}'.format(entry['CountyCode'], entry['PrecinctCode'])
+            prefix = 'Precinct'
         else:
             i = entry[column]
         if entry['Birthdate']:
@@ -192,18 +199,17 @@ def getInformation(input_file, column, output_file):
                         fq4.get(k), fq5.get(k), fq6.get(k)])
                    for k in identifier)
 
-    heading = (column + 'AverageAge,NumberMale,Q1,Q2,Q3,Q4,Q5,Q6,NumFemale,Q1,'
-                        'Q2,Q3,Q4,Q5,Q6'
-                        '\n')
+    heading = ('%s,AverageAge,NumberMale,Q1,Q2,Q3,Q4,Q5,Q6,NumFemale,Q1,'
+               'Q2,Q3,Q4,Q5,Q6\n') % prefix
 
     write_file(output_file, 'ab+', heading)
 
-    print 'Writing ' + column + ' data to ' + output_file + '...'
+    print 'Writing {0} data to {1}.'.format(prefix, output_file)
 
     for key, value in results.items():
         csv.writer(open(output_file, 'ab+')).writerow([key, value])
 
-    print 'Done writing ' + column + ' data to ' + output_file + '.'
+    print 'Done writing {0} data to {1}.'.format(prefix, output_file)
 
 print 'Fetching data... \nFetching cities.'
 
