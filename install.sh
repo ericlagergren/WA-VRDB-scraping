@@ -1,19 +1,27 @@
 set -e
 
-mkdir ~/.sctmp && git clone git@github.com:EricLagerg/WA-VRDB-scraping.git ~/.sctmp
+TMP_INSTALL_DIR=~/.vrdbscraper.tmp
 
-cd ~/.sctmp
+mkdir -p $TMP_INSTALL_DIR && git clone https://github.com/EricLagerg/WA-VRDB-scraping.git $TMP_INSTALL_DIR
+
+cd $TMP_INSTALL_DIR
 
 {
 	cp -r src/vrdb-scraper/ /usr/share/ &&
 	cp src/scraper ~/bin
 } || {
-	echo "Where would you prefer to install VRDB-Scraper? (Type full path and press [Enter]:"
-	read filepath
-	cp -r src/vrdb-scraper/ $filepath
-	cp src/scraper ~/bin
+	read -p "Where would you prefer to install VRDB-Scraper? Type full path and press [Enter]: " filepath
+	if [ ! -d $filepath ]; then
+		mkdir -p $filepath &&
+		cp -r src/vrdb-scraper/ $filepath &&
+		echo -e "#!/bin/bash\n\n"$filepath"/src/scraper.py" > src/scraper &&
+		cp src/scraper ~/bin
+	else
+		cp -r src/vrdb-scraper/ $filepath &&
+		cp src/scraper ~/bin
+	fi
 }
 
-rm -rf ~/.sctmp
+rm -rf $TMP_INSTALL_DIR
 
 exit 0
