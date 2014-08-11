@@ -1,6 +1,6 @@
 set -e
 
-mkdir ~/.sctmp && git clone git@github.com:EricLagerg/WA-VRDB-scraping.git ~/.sctmp;
+mkdir ~/.sctmp && git clone git@github.com:EricLagerg/WA-VRDB-scraping.git ~/.sctmp
 
 cd ~/.sctmp
 
