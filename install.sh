@@ -9,8 +9,8 @@ cd ~/.sctmp
 	cp src/scraper ~/bin
 } || {
 	echo "Where would you prefer to install VRDB-Scraper? (Type full path and press [Enter]:"
-	read path
-	cp -r src/vrdb-scraper path
+	read filepath
+	cp -r src/vrdb-scraper/ $filepath
 	cp src/scraper ~/bin
 }
 
